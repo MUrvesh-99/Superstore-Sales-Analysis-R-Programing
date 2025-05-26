@@ -1,0 +1,1095 @@
+---
+title: "Superstore Sales Analysis"
+author: "Urvesh Mistry - K00302035"
+date: "April 25, 2025"  
+format:
+  docx:
+    toc: true
+    toc-depth: 2
+    number-sections: true
+editor: visual
+---
+
+```{r setup, include= FALSE}
+knitr::opts_chunk$set(
+	echo = FALSE,
+	fig.align = "center",
+	message = FALSE,
+	warning = FALSE,
+	out.height = "500px",
+	out.width = "100%"
+)
+```
+
+```{r to load required packages, include=FALSE}
+library(tidyverse)   
+library(recipes)     
+library(tidymodels) 
+library(lubridate)   
+library(dplyr)
+library(stringr)
+library(ggplot2)
+library(knitr)
+library(bookdown)
+library(patchwork)
+library(skimr)
+library(scales) 
+```
+
+```{r load data}
+superstore <- read.csv(file.choose())
+```
+
+# Problem Statement
+
+"Behind every purchase is a decision, behind every return is a story, and behind every product is a pattern waiting to be discovered". In an era where consumers have higher expectations and loyalty is earned rather than taken for granted, companies want more than dashboards. They require clear understanding.\
+\
+This study connects the dots between sales performance, customer sentiment, and return behavior using a comprehensive Superstore dataset. By designing unique measures such Performance Index and Inventory Stress and then displaying them to show where we are making progress, where we are losing confidence, and where action is overdue, it transcends conventional KPIs.\
+\
+Every bar, scatter, and trend line in this report is a discussion starter for data-driven decisions that generate income and preserve loyalty.
+
+# Solution Summary
+
+This analysis applied a blend of **Data Cleaning**, **Feature Engineering**, and **Visual Storytelling** to the Superstore data-set. which are as follows:
+
+1.  **Data Quality Improvement:** The data set was thoroughly evaluated to identify and rectify any missing, inconsistent, or incorrect data. Textual fields were cleaned and standardized, with errors and special characters removed. Numerical fields are formatted to maintain precision and uniformity throughout the dataset.
+
+2.  **Descriptive Analysis**: Explored the distribution of key metrics of data set through **summary statistics** including mean, median, mode, SD (standard deviation), and IQR for different variables
+
+3.  **Feature Engineering: Created new, insightful variables** to enhance analysis depth and improve the predictive power for business decision making.
+
+4.  **Visualization:** Created **visual representations** (e.g., histograms, bar charts, box plots, scatter plots and Dual axis chart) to understand the data distribution and relationships better.
+
+5.  **Conclusions**: Deciding via the **EDA** on customer satisfaction, return risk patterns, and inventory control helps to identify areas for improvement, increase profitability, and strengthen relations with customers.
+
+```{r include = FALSE}
+view(superstore) ## View the dataset
+```
+
+```{r include = FALSE}
+glimpse(superstore) ## Quick preview of the structure
+```
+
+```{r include = FALSE}
+str(superstore) ## Full structure of the data frame
+```
+
+```{r include = FALSE}
+head(superstore,5) ## Displays the first 5 rows
+```
+
+# Descriptive Statistics:-
+
+```{r include = FALSE}
+summary(superstore) ## Gives statistical summary of each column
+```
+
+### Summary statistics
+
+Overview of my dataset
+
+![Summary Statistics](Applied_BA_Project/graphs/summary%20.jpg)
+
+The dataset consists of 1,000 observations and includes the following variables: Product category, Brand special, Sales amount, Customer satisfaction, Return rate, and Stock levels. Below is a detailed summary of each variable:
+
+**Product_Category**
+
+-   **Length**: 1,000
+
+-   **Class**: Character
+
+-   **Description**: Indicates the category of the product sold (e.g., Electronics, Furniture, Clothing, Groceries).
+
+**Brand_Special**
+
+-   **Length**: 1,000
+
+-   **Class**: Character
+
+-   **Description**: Represents the brand or outlet associated with the product.
+
+**Sales_Amount**
+
+-   **Minimum**: 195.2
+
+-   **1st Quartile**: 434.8
+
+-   **Median**: 505.5
+
+-   **3rd Quartile**: 575.3
+
+-   **Maximum**: 839.0
+
+-   **Class**: Numeric (2 decimal precision)
+
+-   **Description**: Total sales amount for each product line item.
+
+**Customer_Satisfaction**
+
+-   **Minimum**: 2.58
+
+-   **1st Quartile**: 3.67
+
+-   **Median**: 4.00
+
+-   **3rd Quartile**: 4.32
+
+-   **Maximum**: 5.71
+
+-   **Class**: Numeric (rounded to 2 decimals)
+
+-   **Description**: Satisfaction score given by the customer.
+
+**Return_Rate**
+
+-   **Minimum**: 3.44
+
+-   **1st Quartile**: 8.56
+
+-   **Median**: 10.20
+
+-   **3rd Quartile**: 11.61
+
+-   **Maximum**: 17.15
+
+-   **Class**: Numeric (%)
+
+-   **Description**: Percentage of products returned per line item.
+
+**Stock_Levels**
+
+-   **Minimum**: 140
+
+-   **1st Quartile**: 277
+
+-   **Median**: 315
+
+-   **3rd Quartile**: 362
+
+-   **Maximum**: 603
+
+-   **Class**: Integer
+
+-   **Description**: Reflects the number of units in stock at the time of transaction.
+
+```{r}
+skim(superstore) ## provides the summary statistics of all the columns in our dataset with the missing count, unique counts as well as the visual apeals numerical columns.
+```
+
+With **skim()** we can find a more detailed statistical analysis of each column with the count of missing data as shown in the figure
+
+# Data Cleaning:
+
+Data cleaning in R is a crucial step in preparing raw data for analysis, ensuring it's accurate, consistent, and structured correctly.
+
+The Superstore data set, like many real-world datasets, contains inconsistencies, missing values, and formatting issues that can hinder analysis. By cleaning the data, it ensure that it is **accurate, standardized, and optimized** for tasks
+
+### Text Cleanup & Type Conversion
+
+By refining **Product_Category** and **Brand_Special**, it ensured consistency and eliminated potential grouping errors, which is essential for reliable analysis. For original data before cleaning look image
+
+During the data cleaning phase,
+
+1.  **Product_Category Column Cleaning**
+
+-   Used `str_trim()` to eliminate leading and trailing spaces, preventing mismatches (e.g., `"Electronics "` vs `"Electronics"`).
+
+-   Converted the column to **character format** to ensure consistent handling in grouping, filtering, and visualization processes.
+
+2.  **Brand_Special Column Cleaning**
+
+-   Applied `str_trim()` to remove excess spaces, similar to `Product_Category`.
+
+-   Used `str_replace_all("[^[:alnum:] ]", "")` to eliminate characters like `%`, `&`, or `@`, ensuring uniform brand naming.
+
+-   Inserted a space between lowercase-uppercase combinations (e.g., `"RetailX"` to `"Retail X"`) to improve readability.
+
+A clear formatted and consistently labeled brand column and Product category enabling accurate aggregation and ensuring that each brand and category is recognized correctly in grouping operations and visualization.
+
+```{r include=FALSE}
+superstore <- superstore %>%
+  mutate(
+    Product_Category = str_trim(Product_Category),
+    Brand_Special = str_trim(Brand_Special),
+    Product_Category = as.character(Product_Category),
+    Brand_Special = Brand_Special %>%
+      str_replace_all("[^[:alnum:] ]", "") %>%       ## remove special characters alnum - alphanumeric characters
+      str_replace_all("([a-z])([A-Z])", "\\1 \\2") %>%  ## insert space between lowercase and uppercase
+      as.character()                                     ## keep as character
+  )
+
+head(superstore,5)
+```
+
+![Text Cleanup & Type Conversion - Original](Applied_BA_Project/graphs/Text%20Cleanup%20&%20Type%20Conversion%20-%201.jpg)
+
+![Text Cleanup & Type Conversion](Applied_BA_Project/graphs/Text%20Cleanup%20&%20Type%20Conversion%20-%202.jpg)
+
+### Sales_Amount Column Cleaning
+
+-   Used `as.numeric()` to prevent errors caused by text-formatted numbers, ensuring proper calculations.
+
+-   Applied `round(, 2)` to maintain correct currency representation, avoiding unnecessary precision that could complicate financial summaries.
+
+This refinement ensures that **aggregations, comparisons, and financial models** are reliable and error-free
+
+```{r include=FALSE}
+
+#convert sales amount into two decimal
+superstore <- superstore %>%
+  mutate(Sales_Amount = round(as.numeric(Sales_Amount), 2))
+
+head(superstore,5)
+
+```
+
+![Sales amount - Original](Applied_BA_Project/graphs/Sales%20amount%20-%201.jpg)
+
+![Sales amount](Applied_BA_Project/graphs/Sales%20amount%20-%202.jpg)
+
+### Customer_Satisfaction Column Cleaning
+
+-   The dataset was grouped by **Product_Category** and **Brand_Special** to ensure that imputed values reflected relevant product-brand combinations.
+
+-   Within each group, the missing values (`NA`) were replaced by the median satisfaction score, maintaining the natural variation of customer feedback.
+
+-   Example: For `"Groceries" & "Retail X"`, the known satisfaction scores **(3.65, 3.8, 4.87)** resulted in a median **(4.04)**, which was used to fill missing values.
+
+-   All satisfaction scores were rounded to **two decimal places** `round(, 2)` to maintain a consistent numeric format throughout the dataset.
+
+```{r include=FALSE}
+# Median Imputation for Customer Satisfaction
+superstore <- superstore %>%
+  group_by(Product_Category, Brand_Special) %>%
+  mutate(Customer_Satisfaction = ifelse(
+    is.na(Customer_Satisfaction),
+    median(Customer_Satisfaction, na.rm = TRUE),
+    Customer_Satisfaction
+  )) %>%
+  ungroup()
+
+# Round Customer_Satisfaction to two decimal places
+superstore <- superstore %>%
+  mutate(Customer_Satisfaction = round(Customer_Satisfaction, 2),
+         Return_Rate = round(Return_Rate, 2))
+
+head(superstore,5)
+```
+
+![Customer satisfaction - Original](Applied_BA_Project/graphs/Customer%20satisfaction%20-%201.jpg)
+
+![Customer satisfaction](Applied_BA_Project/graphs/Customer%20satisfaction%20-%202.jpg)
+
+### Return_Rate Column Cleaning
+
+-   The dataset was grouped by **Product_Category** and **Brand_Special** to ensure that imputed values reflected relevant product-brand combinations.
+
+-   Replaced `NA` values with the **median return rate** of their respective group (e.g., `"Furniture & Brand A"` → **9.83%** median imputed).
+
+```{r include=FALSE}
+# Median Imputation for Return Rate
+superstore <- superstore %>%
+  group_by(Product_Category, Brand_Special) %>%
+  mutate(Return_Rate = ifelse(
+    is.na(Return_Rate),
+    median(Return_Rate, na.rm = TRUE),
+    Return_Rate
+  )) %>%
+  ungroup()
+
+head(superstore,5)
+```
+
+![Return_Rate Original](Applied_BA_Project/graphs/Return_Rate%201.jpg)
+
+![Return_Rate](Applied_BA_Project/graphs/Return_Rate%202.jpg)
+
+### Stock_Levels Column Cleaning
+
+-   The `Stock_Levels` column represents the number of product units available in inventory at the time of sale. The stock is always measured in full units, the values were **rounded to the nearest whole number** using the `round()` function in R.
+
+    There were **no missing values** in this column, so no imputation was needed.
+
+    ```{r include=FALSE}
+
+    # Round Stock_Levels to whole number
+    superstore <- superstore %>%
+      mutate(Stock_Levels = round(Stock_Levels))
+
+    head(superstore,5)
+    ```
+
+![stock levels - Original](Applied_BA_Project/graphs/stock%20levels%20-%201.jpg)
+
+![stock levels](Applied_BA_Project/graphs/stock%20levels%20-%202.jpg)
+
+# Feature Engineering:
+
+As part of this analysis, three new features were engineered to deepen the understanding of product performance, customer behavior, and inventory efficiency. These derived variables — `Satisfaction_Return_Ratio`, `Performance_Index`, and `Inventory_Stress` — combine existing metrics to uncover relationships
+
+### Satisfaction_Return_Ratio
+
+-   This feature calculates the ratio between **Customer Satisfaction** and **Return Rate**
+
+-   It combines two key customer experience signals that how happy customers are and how often they return products.
+
+-   A high ratio indicates that customers are satisfied and not frequently returning the product a positive sign. Conversely, a lower ratio may highlight inconsistencies, such as high satisfaction scores paired with high return rates, which could point to quality issues, misleading product descriptions, or false-positive reviews.
+
+```{r include=FALSE}
+#add Satisfaction_Return_Ratio
+superstore <- superstore %>%
+  mutate(Satisfaction_Return_Ratio = round(Customer_Satisfaction / Return_Rate, 2))
+```
+
+### Performance_Index
+
+-   A composite metric measuring overall product performance by combining sales, satisfaction, and return behavior
+
+-   This single value reflects a more complete picture of a product’s performance by integrating revenue, experience, and risk.
+
+-   It’s especially useful for ranking or scoring products and brands in terms of effectiveness, and for identifying high-selling items that may still carry hidden risks due to high dissatisfaction or return volume.
+
+```{r include=FALSE}
+# Add Performance Index
+superstore <- superstore %>%
+  mutate(Performance_Index = round((Sales_Amount * Customer_Satisfaction) / Return_Rate, 2))
+```
+
+### Inventory_Stress
+
+-   `Inventory_Stress` measures the strain on inventory by comparing how much stock is held versus how much is sold
+
+-   Calculated as `Stock_Levels ÷ Sales_Amount`, a high value indicates products that are heavily stocked but not selling efficiently, while a low value may indicate strong demand or potential understocking.
+
+-   This metric is valuable for supply chain and inventory teams, as it quickly highlights which products may require attention in terms of restocking, discounting, or supply adjustment.
+
+```{r include=FALSE}
+# Add Inventory Stress Index
+superstore <- superstore %>%
+  mutate(Inventory_Stress = round(Stock_Levels / Sales_Amount, 2))
+
+view(superstore) ## View the dataset
+```
+
+# Cleaning and Feature Engineering
+
+```{r include=FALSE}
+head(superstore)
+```
+
+-   The displayed table represents a snapshot of the `superstore` dataset after undergoing a complete data cleaning and feature engineering process. It highlights a few initial rows with all key columns cleaned, standardized, and enriched to support insightful analysis.
+
+-   Categorical columns such as `Product_Category` and `Brand_Special` were cleaned by removing any leading or trailing white spaces and correcting inconsistent formatting
+
+-   Numerical columns including `Sales_Amount`, `Customer_Satisfaction`, `Return_Rate`, and `Stock_Levels` were standardized. Values were rounded to improve readability and reporting consistency.
+
+-   Additionally, missing values in customer satisfaction and return rate were imputed using the **median value** within each unique combination of product category and brand.
+
+-   Median imputation is used because it is robust to the outliers.
+
+-   As the original dataset is not perfectly normal so to maintain its data integrity without skewing outcomes. i have use median imputation.
+
+-   Three new columns were created through **Feature Engineering**:
+
+-   **`Satisfaction_Return_Ratio`** captures how well satisfaction aligns with return behavior.
+
+-   **`Performance_Index`** aggregates sales, satisfaction, and return rate into a single performance score.
+
+-   **`Inventory_Stress`** compares stock levels with actual sales, revealing whether products are overstocked or efficiently managed.
+
+![Original Dataset](Applied_BA_Project/graphs/Cleaned%20and%20Feature%20Engineering%20-%20OG.jpg)
+
+![Cleaned and Feature Engineered Dataset](Applied_BA_Project/graphs/Cleaned%20and%20Feature%20Engineering.jpg)
+
+# Exploratory Visualisations
+
+#### **Distribution of Customer Satisfaction by Ratings.**
+
+-   To categorize the satisfaction scores into meaningful **ratings**. These thresholds are **business-friendly** and align with how satisfaction is often interpreted in real-world settings (e.g., 5-star ratings).
+
+-   It visualizes how customers are distributed across satisfaction levels, broken into 5 bins that represent levels from “Very Dissatisfied” to “Very Satisfied.”
+
+```{r include=FALSE}
+
+# Group Customer Satisfaction into 5-star rating
+superstore <- superstore %>%
+  mutate(Satisfaction_Group = case_when(
+    Customer_Satisfaction <= 2.5 ~ "Very Dissatisfied",
+    Customer_Satisfaction <= 3.0 ~ "Dissatisfied",
+    Customer_Satisfaction <= 3.5 ~ "Neutral",
+    Customer_Satisfaction <= 4.2 ~ "Satisfied",
+    TRUE ~ "Very Satisfied"
+  )) %>%
+  mutate(Satisfaction_Group = factor(
+    Satisfaction_Group,
+    levels = c("Very Dissatisfied", "Dissatisfied", "Neutral", "Satisfied", "Very Satisfied")
+  ))
+
+```
+
+```{r}
+# Grouped histogram with 5-star Rating
+
+ggplot(superstore, aes(x = Customer_Satisfaction, fill = Satisfaction_Group)) +
+  geom_histogram(bins = 5, color = "black") +
+  stat_bin(
+    bins = 5,
+    geom = "text",
+    aes(label = ifelse(..count.. > 0, count, "")),
+    vjust = -0.4,
+    size = 3.0
+  ) +
+  scale_fill_manual(
+    name = "Satisfaction Level",
+    values = c(
+      "Very Dissatisfied" = "firebrick",
+      "Dissatisfied" = "tomato",
+      "Neutral" = "gold",
+      "Satisfied" = "forestgreen",
+      "Very Satisfied" = "steelblue"
+    )
+  ) +
+  labs(
+    title = "Distribution of Customer Satisfaction ",
+    x = "Customer Satisfaction Score",
+    y = "Frequency"
+  ) +
+  theme(
+    plot.title = element_text(face = "bold", size = 14, hjust = 0.5),
+    axis.title = element_text(face = "bold", size = 12),
+    axis.text = element_text(size = 10),
+    panel.grid.major = element_line(color = "gray85"),
+    panel.grid.minor = element_blank(),
+    panel.border = element_rect(color = "black", fill = NA),
+    legend.title = element_text(face = "bold", size = 10),
+    legend.text = element_text(size = 9),
+    legend.position = "right",
+    legend.box = "vertical",
+    plot.caption = element_text(size = 9, face = "italic")
+  )
+
+
+```
+
+-   This chart serves as an effective starting point for evaluating the **overall tone of customer feedback**, highlighting areas of strength and signaling where improvement efforts can be targeted.
+
+-   By aggregating satisfaction into grouped ratings and visualizing it clearly, it supports **data-driven decisions** aimed at enhancing customer retention and brand rating
+
+-   From the plot, it’s evident that most customers fall into the *Satisfied* and *Very Satisfied* categories, suggesting a generally positive customer experience across the dataset.
+
+-   Very few responses fall into the *Very Dissatisfied* or *Dissatisfied* range, which is encouraging.
+
+-   However, the **moderate number of neutral responses** indicates there may be opportunities for product or service improvement to further push customers into higher satisfaction bands.
+
+#### **Return Rate Distribution**
+
+-   This histogram illustrates the distribution of product return rates in the superstore dataset, grouped into clearly defined risk bands.
+
+-   Each product was classified into one of five **Return Risk Groups,** ranging from *Low Returns (≤6%)* to *Very High Returns (\>14%)* , using logical thresholds that help differentiate levels of return behavior.
+
+```{r include=FALSE}
+# Group for product return rates
+superstore <- superstore %>%
+  mutate(Return_Rate_Group = case_when(
+    Return_Rate <= 6 ~ "Low Returns (≤6%)",
+    Return_Rate <= 9 ~ "Moderate Returns (6–9%)",
+    Return_Rate <= 11.5 ~ "Medium Returns (9–11.5%)",
+    Return_Rate <= 14 ~ "High Returns (11.5–14%)",
+    TRUE ~ "Very High Returns (>14%)"
+  )) %>%
+  mutate(Return_Rate_Group = factor(
+    Return_Rate_Group,
+    levels = c("Low Returns (≤6%)", "Moderate Returns (6–9%)",
+               "Medium Returns (9–11.5%)", "High Returns (11.5–14%)",
+               "Very High Returns (>14%)")
+  ))
+
+```
+
+```{r}
+# Return_Rate	Histogram	
+ggplot(superstore, aes(x = Return_Rate, fill = Return_Rate_Group)) +
+  geom_histogram(breaks = c(3.4, 6, 9, 11.5, 14, 18), color = "black") +
+  stat_bin(
+    breaks = c(3.4, 6, 9, 11.5, 14, 18),
+    geom = "text",
+    aes(label = ifelse(..count.. > 0, count, "")),
+    vjust = -0.5,
+    size = 3
+  ) +
+  scale_fill_manual(
+    name = "Return Risk Group",
+    values = c(
+      "Low Returns (≤6%)" = "forestgreen",
+      "Moderate Returns (6–9%)" = "gold",
+      "Medium Returns (9–11.5%)" = "orange",
+      "High Returns (11.5–14%)" = "orangered",
+      "Very High Returns (>14%)" = "firebrick"
+    )
+  ) +
+  labs(
+    title = "Distribution of Product Return Rates ",
+    x = "Return Rate (%)",
+    y = "Number of Products",
+    ) +
+  theme(
+    plot.title = element_text(face = "bold", size = 12, hjust = 0.5),
+    axis.title = element_text(face = "bold", size = 12),
+    axis.text = element_text(size = 10),
+    panel.grid.major = element_line(color = "gray85"),
+    panel.grid.minor = element_blank(),
+    panel.border = element_rect(color = "black", fill = NA),
+    legend.title = element_text(face = "bold"),
+    legend.position = "right",
+    plot.caption = element_text(size = 9, face = "italic")
+  )
+
+```
+
+-   The chart reveals that the majority of products fall into the *Medium Returns (9–11.5%)* group, with **449 occurrences**, followed by the *Moderate Returns (6–9%)* category at **258 occurrences**. This suggests that most products return at a manageable but non-negligible rate.
+
+-   However, there’s a noticeable cluster on the higher-risk end, **221 products** fall under the *High Returns (11.5–14%)* band.
+
+-   **36 products** in the *Very High Returns (\>14%)* category could indicate serious quality issues or mismatches in customer expectations.
+
+-   On the other hand, only **36 products** show very low return rates (≤6%), revealing that very few items are consistently immune to returns.
+
+#### Average Sales Per Product
+
+-   **Bar chart that visualizes the average sales amount per product category** in the Superstore dataset.
+
+-   A custom color palette is defined using specific codes, assigning a unique and consistent color to each product category.
+
+-   The dataset is grouped by `Product_Category`, and the average of the `Sales_Amount` is calculated for each group using the `summarise()` function from the `dplyr` package.
+
+```{r include=FALSE}
+# Colors for Product_Category 
+category_colors <- c(
+  "Clothing" = "#F8766D",
+  "Electronics" = "#7CAE00",
+  "Furniture" = "#00BFC4",
+  "Groceries" = "#C77CFF"
+)
+```
+
+```{r}
+# Average Sales by Product Category
+ggplot(superstore %>%
+         group_by(Product_Category) %>%
+         summarise(Average_Sales = mean(Sales_Amount)),
+       aes(x = reorder(Product_Category, -Average_Sales), y = Average_Sales, fill = Product_Category)) +
+  geom_col(color = "black") +
+  geom_text(aes(label = round(Average_Sales, 2)), vjust = -0.5, size = 3.5) +
+  scale_fill_manual(values = category_colors, name = "Product Category") +
+  labs(
+    title = "Average Sales per Product by Category",
+    x = "Product Category",
+    y = "Average Sales",
+  ) +
+  theme(
+    plot.title = element_text(face = "bold", size = 12, hjust = 0.5),
+    axis.title = element_text(face = "bold", size = 12),
+    axis.text = element_text(size = 10),
+    panel.grid.major = element_line(color = "gray85"),
+    panel.grid.minor = element_blank(),
+    panel.border = element_rect(color = "black", fill = NA),
+    legend.title = element_text(face = "bold"),
+    legend.text = element_text(size = 9),
+    legend.position = "right",
+    plot.caption = element_text(size = 9, face = "italic")
+  )
+
+```
+
+-   **Clothing** has the highest average sales per product, with approximately **\$514.98**.
+
+-   **Furniture** follows with **\$503.94**, then **Groceries** at **\$499.99**.
+
+-   **Electronics** has the lowest average at **\$498.90**.
+
+-   Although the differences between categories are relatively small, the chart clearly demonstrates that **Clothing tends to generate slightly higher revenue per product sold** compared to the others.
+
+-   This type of visualization is important in decision-making because it highlights **which product categories are more profitable on average**
+
+#### Performance Index by Return Rate Group
+
+-   The code first groups the Superstore dataset by return rate risk categories and calculates the **median performance index** for each group.
+
+-   It simplifies the return rate labels for cleaner plotting and enforces a business-intuitive order ie. (Low to Very High).
+
+```{r include=FALSE}
+# Calculate median Performance Index for each Return Rate Group
+median_perf <- superstore %>%
+  group_by(Return_Rate_Group) %>%
+  summarise(Median_Performance = round(median(Performance_Index, na.rm = TRUE), 2), .groups = "drop") %>%
+  mutate(
+    Simple_Label = case_when(
+      Return_Rate_Group == "Low Returns (≤6%)" ~ "Low",
+      Return_Rate_Group == "Moderate Returns (6–9%)" ~ "Moderate",
+      Return_Rate_Group == "Medium Returns (9–11.5%)" ~ "Medium",
+      Return_Rate_Group == "High Returns (11.5–14%)" ~ "High",
+      Return_Rate_Group == "Very High Returns (>14%)" ~ "Very High"
+    )
+  )
+
+```
+
+```{r include=FALSE}
+# Ensure the bar order matches the legend and risk logic
+median_perf$Simple_Label <- factor(median_perf$Simple_Label, 
+                                   levels = c("Low", "Moderate", "Medium", "High", "Very High"))
+```
+
+```{r}
+# Plot: Median Performance Index by Return Rate Group (cleaned order)
+ggplot(median_perf, aes(x = Simple_Label, y = Median_Performance, fill = Return_Rate_Group)) +
+  geom_col(width = 0.75, color = "black") +
+  geom_text(aes(label = Median_Performance), vjust = -0.4, size = 4, fontface = "bold") +
+  scale_fill_manual(
+    name = "Return Rate Group",
+    values = c(
+      "Low Returns (≤6%)" = "forestgreen",
+      "Moderate Returns (6–9%)" = "gold",
+      "Medium Returns (9–11.5%)" = "orange",
+      "High Returns (11.5–14%)" = "orangered",
+      "Very High Returns (>14%)" = "firebrick"
+    )
+  ) +
+  labs(
+    title = "Performance Index by Return Risk Group",
+    x = "Return Risk Category",
+    y = "Median Performance Index",
+      ) +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(face = "bold", size = 13, hjust = 0.5),
+    axis.title = element_text(face = "bold", size = 12),
+    axis.text = element_text(size = 10),
+    legend.title = element_text(face = "bold"),
+    legend.position = "right",
+    plot.caption = element_text(size = 9, face = "italic")
+  )
+
+```
+
+-   Then, it visualizes these values in a **color-coded bar chart**, where each bar represents a return group and its corresponding median performance score.
+
+-   The resulting graph clearly shows that products with **lower return rates** tend to have **higher performance indexes**, which signals that high-performing products are also more stable
+
+#### Performance Index Distribution by Product Category
+
+-   Boxplot visualization that compares the **distribution of Performance Index** across different product categories in the Superstore dataset
+
+-   It first calculates the **interquartile range (IQR)** and **median** of the performance index for each category and stores the results in a summary table.
+
+```{r include=FALSE}
+#creates a summary table called iqr_data
+iqr_data <- superstore %>%
+  group_by(Product_Category) %>%
+  summarise(
+    IQR_Value = IQR(Performance_Index, na.rm = TRUE),
+    Median = median(Performance_Index, na.rm = TRUE)
+  )
+```
+
+```{r}
+ggplot(superstore, aes(x = Product_Category, y = Performance_Index, fill = Product_Category)) +
+  geom_boxplot(outlier.color = "red", outlier.shape = 18, outlier.size = 2) +
+  stat_summary(fun = median, geom = "point", shape = 21, size = 3.,
+               fill = "white", color = "black", stroke = 1,
+               aes(group = Product_Category)) +
+  geom_text(data = iqr_data, aes(x = Product_Category, y = Median - 7,  # adjust Y as needed
+                                 label = paste0("IQR: ", round(IQR_Value, 2))),
+            size = 3, fontface = "italic", color = "black") +
+  labs(
+    title = "Performance Index Distribution ",
+    x = "Product Category",
+    y = "Performance Index",
+    fill = "Product Category",
+    ) +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(face = "bold", hjust = 0.5, size = 12),
+    axis.title = element_text(face = "bold", size = 12),
+    axis.text = element_text(size = 10),
+    legend.title = element_text(face = "bold"),
+    legend.text = element_text(size = 10),
+    legend.position = "right",
+    plot.caption = element_text(size = 9, face = "italic")
+  )
+```
+
+-   The **middle 50%** of values (interquartile range or IQR)
+
+-   The **median** is highlighted with a **white dot** and a bold horizontal line inside the box.
+
+-   **Red diamonds** represent **outliers**
+
+-   The IQR value is displayed under each median, giving you an idea of how widely values vary in each category.
+
+#### Inventory Stress vs Sales Amount
+
+-   Scatterplot visualizes the **relationship between inventory stress and sales performance** across all products.
+
+-   This code creates a new column `Inventory_Stress_Group` that **categorizes the `Inventory_Stress` ratio into 5 meaningful bands**.
+
+```{r include=FALSE}
+# Create Inventory Stress Groups based on value 
+superstore <- superstore %>%
+  mutate(Inventory_Stress_Group = case_when(
+    Inventory_Stress <= 0.50 ~ "Very Low",
+    Inventory_Stress <= 0.60 ~ "Low",
+    Inventory_Stress <= 0.75 ~ "Medium",
+    Inventory_Stress <= 0.90 ~ "High",
+    TRUE ~ "Very High"
+  )) %>%
+  mutate(Inventory_Stress_Group = factor(
+    Inventory_Stress_Group,
+    levels = c("Very Low", "Low", "Medium", "High", "Very High")
+  ))
+```
+
+```{r}
+# Plot: Inventory Stress vs Sales Amount 
+ggplot(superstore, aes(x = Inventory_Stress, y = Sales_Amount, color = Inventory_Stress_Group)) +
+  geom_point(alpha = 0.7, size = 2.5) +
+  scale_color_manual(
+    name = "Inventory Stress Level",
+    values = c("Very Low" = "#2E8B57", "Low" = "#66C2A5", "Medium" = "#FFD92F", 
+               "High" = "#FC8D62", "Very High" = "#D53E4F")
+  ) +
+  labs(
+    title = "Inventory Stress vs Sales Amount",
+    x = "Inventory Stress (Stock / Sales)",
+    y = "Sales Amount"
+  ) +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(face = "bold", hjust = 0.5, size = 13),
+    plot.subtitle = element_text(face = "italic", hjust = 0.5, size = 11),
+    axis.title = element_text(face = "bold", size = 12),
+    axis.text = element_text(size = 10),
+    legend.title = element_text(face = "bold"),
+    legend.text = element_text(size = 10),
+    legend.position = "right"
+  )
+```
+
+-   These groups help to segment products based on how stressed their inventory is (i.e., how much stock they hold in relation to their sales performance).
+
+-   The **x-axis** shows how much inventory a product has relative to its sales (lower is better).
+
+-   The **y-axis** shows total sales.
+
+-   Products with low inventory stress tend (green/teal) to achieve higher sales, while those with high stress (especially in the red categories) tend to perform poorly in terms of revenue.
+
+#### Customer Satisfaction by Different Brands Within Category
+
+-   A **faceted boxplot** to visualize **customer satisfaction by brand** within each `Product_Category` from the Superstore dataset
+
+-   it calculates the **median customer satisfaction score** for every combination of product category and brand, storing it in a summary table.
+
+-   Then, using `ggplot2`, it creates a panelled (faceted) chart that displays boxplots of satisfaction scores for each brand, segmented by product category.
+
+```{r include=FALSE}
+# Define consistent colors for Product_Category 
+category_colors <- c(
+  "Clothing" = "#F8766D",
+  "Electronics" = "#7CAE00",
+  "Furniture" = "#00BFC4",
+  "Groceries" = "#C77CFF"
+)
+```
+
+```{r include=FALSE}
+# Calculate median satisfaction for each brand-category pair
+medians <- superstore %>%
+  group_by(Product_Category, Brand_Special) %>%
+  summarise(Median_Score = round(median(Customer_Satisfaction, na.rm = TRUE), 2), .groups = "drop")
+```
+
+```{r}
+# Base plot with white dot (median) and median label
+ggplot(superstore, aes(x = Brand_Special, y = Customer_Satisfaction, fill = Product_Category)) +
+  geom_boxplot(outlier.color = "red", outlier.shape = 18, outlier.size = 1.5) +
+  geom_text(data = medians,
+            aes(x = Brand_Special, y = 2.6, label = Median_Score),  # Adjust Y value if needed
+            size = 3, fontface = "italic", color = "black") +
+  facet_wrap(~ Product_Category, scales = "free_x") +
+  labs(
+    title = "Customer Satisfaction by Brand within Product Category",
+    x = "Brand" ,
+    y = "Customer Satisfaction",
+    fill = "Product Category"
+  ) +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(face = "bold", hjust = 0.5, size = 12),
+    plot.subtitle = element_text(face = "italic", hjust = 0.5, size = 10),
+    axis.text.x = element_text(angle = 90, hjust = 1, size = 8),
+    axis.title = element_text(face = "bold"),
+    legend.position = "none"
+  )
+```
+
+-   Each **box** represents the distribution of satisfaction ratings for a brand.
+
+-   The **red diamonds** highlight outlier scores that either have high or low values.
+
+-   The **black italic numbers** below each box are the median scores for each brand,
+
+-   In **Furniture**, "Retail X" stands out with the highest median score (4.16), suggesting strong brand satisfaction.
+
+-   **Outlet Y** underperforms in both **Electronics** and **Furniture**, with visibly lower medians.
+
+#### Performance Index by Brand
+
+-   This R script creates a **boxplot visualization** to compare the **Performance Index** distribution across different brands in the Superstore dataset.
+
+-   It starts by calculating the median performance score for each brand, which is then used as a reference point in the visualization.
+
+```{r include=FALSE}
+# Define brand colors for consistency (optional, you can change them)
+brand_colors <- c(
+  "Brand A" = "#F8766D",
+  "Outlet Y" = "#D89000",
+  "Retail X" = "#A3A500",
+  "Shop Z" = "#39B600"
+)
+```
+
+```{r include=FALSE}
+# Calculate medians
+brand_medians <- superstore %>%
+  group_by(Brand_Special) %>%
+  summarise(Median_PI = round(median(Performance_Index, na.rm = TRUE), 2), .groups = "drop")
+```
+
+```{r}
+# Plot: Performance Index by Brand (Boxplot)
+ggplot(superstore, aes(x = Brand_Special, y = Performance_Index, fill = Brand_Special)) +
+  geom_boxplot(outlier.color = "red", outlier.shape = 18, outlier.size = 2) +
+  geom_text(data = brand_medians,
+            aes(x = Brand_Special, y = 190, label = Median_PI),
+            size = 3.5, fontface = "italic", color = "black") +
+  scale_fill_manual(values = brand_colors) +
+  labs(
+    title = "Performance Index by Brand",
+    x = "Brand",
+    y = "Performance Index",
+    fill = "Brand"
+  ) +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(face = "bold", hjust = 0.5, size = 14),
+    plot.subtitle = element_text(face = "italic", hjust = 0.5, size = 10),
+    axis.title = element_text(face = "bold", size = 12),
+    axis.text = element_text(size = 10),
+    legend.position = "right"
+  )
+
+```
+
+-   The plot itself displays each brand’s performance distribution, highlighting central tendency and spread through boxplot statistics (Q1, Q3, and median), while visually flagging **outliers** in red.
+
+-   A clearly labeled **median value is displayed below each box**, enhancing interpretability.
+
+-   The chart helps to compare brand performance, spot inconsistencies, and identify brands with high variability or outlier behaviors
+
+#### Customer Satisfaction vs. Sales Amount (Facet Chart)
+
+-   A **faceted scatter plot** that analyzes the relationship between **Customer Satisfaction and Sales Amount** across different product categories in the Superstore dataset.
+
+-   Using `ggplot2`, the script maps individual product records as points and colors them by product category.
+
+```{r}
+
+# Faceted Scatter Plot: Customer Satisfaction vs Sales Amount by Product Category
+
+ggplot(superstore, aes(x = Customer_Satisfaction, y = Sales_Amount)) +
+  geom_point(alpha = 0.6, size = 2, aes(color = Product_Category)) +
+  geom_smooth(method = "lm", se = FALSE, linetype = "dashed", color = "black", size = 0.8) +
+  facet_wrap(~ Product_Category) +
+  scale_color_manual(
+    values = c(
+      "Clothing" = "#F8766D",
+      "Electronics" = "#7CAE00",
+      "Furniture" = "#00BFC4",
+      "Groceries" = "#C77CFF"
+    )
+  ) +
+  labs(
+    title = "Customer Satisfaction vs Sales Amount",
+    x = "Customer Satisfaction Score",
+    y = "Sales Amount",
+    color = "Product Category"
+  ) +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(face = "bold", size = 12, hjust = 0.5),
+    plot.subtitle = element_text(face = "italic", size = 10, hjust = 0.5),
+    axis.title = element_text(face = "bold", size = 12),
+    axis.text = element_text(size = 10),
+    legend.position = "none"  # Legend removed as it's clear from facets
+  )
+```
+
+-   The chart includes a **dashed linear regression line** in each panel to highlight potential trends.
+
+-   The graph visually separates data by category using **faceting**, allowing targeted interpretation. For example, in categories like **Furniture and Clothing**, there appears to be a mild **positive relationship**, where higher satisfaction aligns with greater sales
+
+-   In contrast, **Electronics** shows little to no correlation, suggesting other factors might drive revenue in that category.
+
+#### Scatterplot between `Return_Rate` and `Sales_Amount`
+
+-   A **scatterplot** that explores the relationship between `Return_Rate` and `Sales_Amount` across various product categories.
+
+-   Each point in the plot represents a product or transaction, with its color determined by its `Product_Category`
+
+-   By applying transparency and minimal theming, the chart remains readable even with complex data.
+
+```{r}
+# Scatterplot: Return Rate vs Sales Amount with Product Category color
+ggplot(superstore, aes(x = Return_Rate, y = Sales_Amount, color = Product_Category)) +
+  geom_point(alpha = 0.7, size = 2) +
+  labs(
+    title = "Relations Between Return Rate and Sales Amount",
+    x = "Return Rate (%)",
+    y = "Sales Amount",
+    color = "Product Category"
+  ) +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(face = "bold", size = 12, hjust = 0.5),
+    plot.subtitle = element_text(face = "italic", size = 10, hjust = 0.5),
+    axis.title = element_text(face = "bold", size = 10),
+    axis.text = element_text(size = 10),
+    legend.title = element_text(face = "bold"),
+    legend.position = "right"
+  )
+
+```
+
+-   The graph reveals a **positive linear relationship** between return rates and sales amounts.
+
+-   As sales grow, return rates typically increase which are likely due to larger volumes leading to higher chances of returns.
+
+#### **Average Sales Revenue**
+
+-   A **dual-axis comparison** of **average sales** and **average return rate** across each product category using a combination of bar and line plots
+
+-   First, it computes the median sales and return rate per category and maps this in a bar chart for sales and a dashed line plot for return rate.
+
+-   It uses a **dual axis** system to represent both metrics clearly and formats the return rate using red indicators and percentage labels.
+
+```{r include=FALSE}
+# Define consistent product category colors
+category_colors <- c(
+  "Clothing" = "#F8766D",
+  "Electronics" = "#7CAE00",
+  "Furniture" = "#00BFC4",
+  "Groceries" = "#C77CFF"
+)
+
+```
+
+```{r include=FALSE}
+# Calculate average sales and return rate per Product Category
+summary_df <- superstore %>%
+  group_by(Product_Category) %>%
+  summarise(
+    Avg_Sales = median(Sales_Amount, na.rm = TRUE),
+    Avg_Return_Rate = mean(Return_Rate, na.rm = TRUE)
+  )
+```
+
+```{r}
+# Base plot
+ggplot(summary_df, aes(x = Product_Category)) +
+  
+  # Bar plot for average sales
+  geom_col(aes(y = Avg_Sales, fill = Product_Category), width = 0.6) +
+  geom_text(aes(y = Avg_Sales + 5, label = dollar(Avg_Sales)), size = 3.5, vjust = -0.5) +
+  
+  # Line for average return rate
+  geom_line(aes(y = Avg_Return_Rate * 50, group = 1), color = "firebrick", linewidth = 1.2, linetype = "dashed") +
+  geom_point(aes(y = Avg_Return_Rate * 50), color = "firebrick", size = 3) +
+  geom_text(aes(y = Avg_Return_Rate * 50 + 5, label = paste0(round(Avg_Return_Rate, 1), "%")),
+            color = "firebrick", size = 3.5, vjust = 1.8) +
+  
+  scale_y_continuous(
+    name = "Average Sales",
+    sec.axis = sec_axis(~ . / 50, name = "Average Return Rate (%)")
+  ) +
+  
+  scale_fill_manual(values = category_colors) +
+  
+  labs(
+    title = "Avg Sales vs Return Rate",
+    x = "Product Category",
+    fill = "Product Category"
+  ) +
+  
+  theme_minimal() +
+  theme(
+    plot.title = element_text(face = "bold", hjust = 0.5, size = 11),
+    plot.subtitle = element_text(hjust = 0.5, face = "italic", size = 10),
+    axis.title.y = element_text(color = "#00BFC4", face = "bold"),
+    axis.title.y.right = element_text(color = "firebrick", face = "bold"),
+    axis.text.x = element_text(size = 10),
+    legend.position = "right",
+    legend.title = element_text(face = "bold")
+  )
+
+```
+
+-   The resulting graph provides categories like **Clothing** show the highest sales, they also carry **slightly higher return rates**, helping analysts **weigh profitability against risk**.
+
+# Conclusion from Exploratory Data Analysis
+
+This comprehensive exploratory analysis of the Superstore dataset, which included data cleaning, feature engineering, and insightful visualizations, uncovered several key patterns and relationships across sales performance, return behavior, customer satisfaction, inventory efficiency, and brand dynamics. These findings provide actionable direction for business improvements across product, operations, and marketing strategies.
+
+**Customer Satisfaction Distribution:**\
+Most customers are satisfied or very satisfied, but a noticeable neutral segment reveals room for improvement.
+
+**Return Rate Distribution:**\
+Return rates are mostly moderate to high, suggesting a need for better product quality or customer alignment.
+
+**Average Sales by Product Category:**\
+Clothing generates the highest average sales, but return rates must be factored in to assess true profitability.
+
+**Performance Index by Return Rate Group:**\
+Lower return rates strongly correlate with higher product performance, while performance drops as return risk increases.
+
+**Performance Index by Product Category:**\
+Clothing and Furniture show high performance variability, while Electronics is more stable but underperforms overall.
+
+**Inventory Stress vs Sales:**\
+Higher inventory stress is linked to lower sales, indicating overstocking or weak demand.
+
+**Customer Satisfaction by Brand:**\
+Brand satisfaction varies widely within categories; “Retail X” performs well, while “Outlet Y” underperforms.
+
+**Performance Index by Brand:**\
+Brand A performs best overall, while others show inconsistency and outliers that may affect reliability.
+
+**Satisfaction vs Sales:**\
+Some categories (like Furniture) show that happier customers spend more, but this isn’t true across the board.
+
+**Return Rate vs Sales:**\
+Higher sales often bring higher returns, reinforcing the need to manage returns without hurting volume.
+
+**Sales vs Return Rate (Dual Axis):**\
+Clothing leads in sales but also has high return rates, requiring balance to protect margins.
+
+# Strategic Recommendations
+
+-   Reduce stock for underperforming items to free up space and improve sales efficiency.
+
+-   Introduce clearer expectations and better product information, especially in Clothing.
+
+-   Support consistent brands like “Retail X” and reevaluate those with weaker performance.
+
+-   Target “neutral” customers with follow-ups and incentives to turn them into loyal buyers.
+
+-   Use brand dashboards to guide promotions, pricing, and inventory planning.
