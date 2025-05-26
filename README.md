@@ -1,83 +1,37 @@
 # Superstore-Sales-Analysis-R-Programing
-## 🔍 1. Project Objective
 
-The study explores hidden patterns in sales, returns, and customer sentiment using a dataset of 1,000 observations. It introduces novel metrics like:
+This project analyzes a fictional **Superstore dataset** to uncover insights into sales performance, customer satisfaction, return behavior, and inventory efficiency.
 
-#### Performance Index
+### Key Steps:
 
-#### Inventory Stress
+**Data Cleaning**: Standardized text fields, handled missing values using median imputation, and ensured numeric formatting.
 
-#### Satisfaction-Return Ratio
+**Feature Engineering**: Created new metrics —
 
-These metrics aim to go beyond simple KPIs to support strategic, data-driven business decisions.
+Satisfaction_Return_Ratio (Customer Experience vs Returns)
 
+Performance_Index (Sales, Satisfaction, Returns combined)
 
-## 🛠 2. Methodology
+Inventory_Stress (Stock vs Sales)
 
-#### A. Data Cleaning
+### Visual Insights:
+Most customers are satisfied, but return rates remain moderately high.
 
-Removed extra spaces and special characters in text fields (e.g., Product_Category, Brand_Special)
+Clothing has the highest average sales but also higher returns.
 
-Converted values to appropriate types (e.g., numeric for Sales_Amount)
+High inventory stress correlates with low sales.
 
-Used median imputation for missing values in Customer_Satisfaction and Return_Rate, grouped by product and brand (more robust to outliers)
+“Retail X” is a top-performing brand; “Outlet Y” underperforms.
 
-Rounded numerical fields to enhance clarity
+### Strategic Business Recommendations:
 
-#### B. Feature Engineering
+Improve product quality and descriptions to reduce returns.
 
-Three new metrics were introduced:
+Focus on high-performing brands.
 
-Satisfaction_Return_Ratio = Satisfaction ÷ Return Rate → balances user happiness against return behavior
+Reduce overstocking of slow-moving items.
 
-Performance_Index = Combines sales, satisfaction, and returns into a composite score
+Target neutral customers to boost retention.
 
-Inventory_Stress = Stock Level ÷ Sales → assesses how well inventory is moving
+Built in R with ggplot2, dplyr, and Quarto.
 
-
-## 📊 3. Exploratory Data Analysis (EDA)
-
-A variety of ggplot2 visualizations were created to derive insights:
-
-##### A. Customer Satisfaction
-
-Most customers are satisfied or very satisfied
-
-##### B. Return Rate Patterns
-
-Majority of products fall in moderate (9–11.5%) or high (11.5–14%) return groups
-
-Very few items have low return rates → indicating possible quality or expectation mismatch
-
-##### C. Sales Insights
-
-Clothing generates the highest average sales, followed by Furniture
-
-##### D. Performance Index Trends
-
-Products with lower return rates generally score higher on Performance Index
-
-Clothing shows high variability in performance, indicating potential inconsistency
-
-##### E. Inventory Efficiency
-
-High Inventory Stress is negatively correlated with Sales → suggests overstocked items are not performing well
-
-##### F. Brand Analysis
-
-“Retail X” generally performs well across multiple metrics
-
-“Outlet Y” shows lower satisfaction and performance → might require review or support
-
-
-## 🧠 4. Strategic Business Recommendations
-
-Reduce stock for low-performing, high-stress items
-
-Improve product info, especially for categories with high returns like Clothing
-
-Promote strong brands (e.g., Retail X), reevaluate weaker ones
-
-Engage with “neutral” customers to convert them to loyal ones
-
-Use interactive dashboards to monitor these metrics for better decision-making
